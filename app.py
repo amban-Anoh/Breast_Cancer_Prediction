@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request
 import joblib
 import numpy as np
@@ -8,7 +9,7 @@ app = Flask(__name__)
 # Load model and preprocessing objects
 model = joblib.load('breast_cancer_model.pkl')
 scaler = joblib.load('scaler.pkl')
-selected_features = joblib.load('selected_features.pkl')  # List of feature names
+selected_features = joblib.load('selected_features.pkl')  # list of strings
 
 @app.route('/')
 def home():
@@ -17,11 +18,10 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Extract input into a dict using feature names
+        # Use form input keys matching selected_features
         input_data = {name: float(request.form[name]) for name in selected_features}
-        df = pd.DataFrame([input_data])  # Create DataFrame with column names
+        df = pd.DataFrame([input_data])
 
-        # Scale and predict
         scaled = scaler.transform(df)
         prediction = model.predict(scaled)
         result = 'Malignant' if prediction[0] == 1 else 'Benign'
@@ -31,4 +31,5 @@ def predict():
         return render_template('index.html', prediction_text=f'Error: {str(e)}')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))  # ✅ Heroku fix
+    app.run(debug=False, host='0.0.0.0', port=port)
