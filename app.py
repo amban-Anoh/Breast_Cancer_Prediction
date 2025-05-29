@@ -1,12 +1,14 @@
-import os
 from flask import Flask, render_template, request
 import joblib
 import numpy as np
+import pandas as pd
 
 app = Flask(__name__)
 
-# Load the trained model
+# Load model and preprocessing objects
 model = joblib.load('breast_cancer_model.pkl')
+scaler = joblib.load('scaler.pkl')
+selected_features = joblib.load('selected_features.pkl')  # List of feature names
 
 @app.route('/')
 def home():
@@ -15,14 +17,18 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Extract features from form input
-        features = [float(x) for x in request.form.values()]
-        prediction = model.predict([features])
+        # Extract input into a dict using feature names
+        input_data = {name: float(request.form[name]) for name in selected_features}
+        df = pd.DataFrame([input_data])  # Create DataFrame with column names
+
+        # Scale and predict
+        scaled = scaler.transform(df)
+        prediction = model.predict(scaled)
         result = 'Malignant' if prediction[0] == 1 else 'Benign'
+
         return render_template('index.html', prediction_text=f'Tumor Type: {result}')
     except Exception as e:
         return render_template('index.html', prediction_text=f'Error: {str(e)}')
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Use Heroku's dynamic port
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=5000)
