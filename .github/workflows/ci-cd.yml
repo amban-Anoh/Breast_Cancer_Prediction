@@ -22,8 +22,20 @@ jobs:
       - name: Push to Heroku Container Registry
         run: docker push registry.heroku.com/breast-cancer-prediction-app/web
 
-      - name: Release the app
-        run: |
-          heroku container:release web -a breast-cancer-prediction-app
+      - name: Release the app (via curl)
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          IMAGE_ID=$(docker inspect registry.heroku.com/breast-cancer-prediction-app/web --format={{.Id}})
+          curl -n -X PATCH https://api.heroku.com/apps/breast-cancer-prediction-app/formation \
+          -d '{
+            "updates": [
+              {
+                "type": "web",
+                "docker_image": "'"$IMAGE_ID"'"
+              }
+            ]
+          }' \
+          -H "Content-Type: application/json" \
+          -H "Accept: application/vnd.heroku+json; version=3.docker-releases" \
+          -H "Authorization: Bearer $HEROKU_API_KEY"
