@@ -1,15 +1,15 @@
 <h2>Enter Diagnostic Measurements (Top 10 Features)</h2>
 <form action="/predict" method="post">
-    Radius Mean: <input type="text" name="radius_mean"><br>
-    Perimeter Mean: <input type="text" name="perimeter_mean"><br>
-    Area Mean: <input type="text" name="area_mean"><br>
-    Concavity Mean: <input type="text" name="concavity_mean"><br>
-    Concave Points Mean: <input type="text" name="concave_points_mean"><br>
-    Radius Worst: <input type="text" name="radius_worst"><br>
-    Perimeter Worst: <input type="text" name="perimeter_worst"><br>
-    Area Worst: <input type="text" name="area_worst"><br>
-    Concavity Worst: <input type="text" name="concavity_worst"><br>
-    Concave Points Worst: <input type="text" name="concave_points_worst"><br><br>
+    {% for field in [
+        'radius_mean', 'perimeter_mean', 'area_mean', 'concavity_mean', 'concave_points_mean',
+        'radius_worst', 'perimeter_worst', 'area_worst', 'concavity_worst', 'concave_points_worst'
+    ] %}
+        <div>
+            <label for="{{ field }}">{{ field.replace('_', ' ').title() }}:</label>
+            <input type="text" name="{{ field }}" id="{{ field }}" value="{{ request.form.get(field, '') }}">
+        </div>
+        <br>
+    {% endfor %}
 
     <input type="submit" value="Predict">
 </form>
