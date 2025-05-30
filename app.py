@@ -5,10 +5,10 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# Load model components
+# Load model, scaler, and selected features
 model = joblib.load('breast_cancer_model.pkl')
 scaler = joblib.load('scaler.pkl')
-selected_features = joblib.load('selected_features.pkl')
+selected_features = joblib.load('selected_features.pkl')  # List of feature names
 
 @app.route('/')
 def home():
@@ -17,12 +17,8 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Collect and align input with selected features
-        input_data = {}
-        for feature in selected_features:
-            value = float(request.form.get(feature, 0))
-            input_data[feature] = value
-
+        # Collect input values in correct feature order
+        input_data = {feature: float(request.form[feature]) for feature in selected_features}
         df = pd.DataFrame([input_data], columns=selected_features)
 
         # Scale and predict
@@ -32,6 +28,7 @@ def predict():
 
         return render_template('index.html', prediction_text=f'Tumor Type: {result}')
     except Exception as e:
+        # Show detailed error in UI for debugging
         return render_template('index.html', prediction_text=f'Error: {str(e)}')
 
 if __name__ == '__main__':
